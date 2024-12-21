@@ -5,6 +5,7 @@
 #ifndef SEM3LAB1_PTREXCEPTION_H
 #define SEM3LAB1_PTREXCEPTION_H
 #include <exception>
+#include <stdexcept>
 #include <string>
 #include <utility>
 class PtrException: public std::exception

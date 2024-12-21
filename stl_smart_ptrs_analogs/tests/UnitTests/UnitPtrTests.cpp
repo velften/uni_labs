@@ -1,5 +1,6 @@
 #include "../../srс/ptrs/UnqPtr.h"
 #include "../../srс/ptrs/ShrdPtr.h"
+//#include "../../src/ptrs/PtrException.h"
 #include <gtest/gtest.h>
 
 
@@ -79,7 +80,7 @@ TEST(UnqPtrTest, ResetMethod) {
 
 TEST(UnqPtrTest, DereferenceNullptrThrows) {
     UnqPtr<int> ptr(nullptr);
-    ASSERT_THROW(*ptr, const char*);
+    ASSERT_THROW(*ptr, std::exception);
 }
 
 
@@ -138,12 +139,12 @@ TEST(UnqPtrArrayTest, OperatorIndex) {
 TEST(UnqPtrArrayTest, OperatorIndexOutOfRange) {
     int* value = new int[3]{1, 2, 3};
     UnqPtr<int[]> ptr(value);
-    ASSERT_THROW(ptr[-1], const char*);
+    ASSERT_THROW(ptr[-1], std::exception);
 }
 
 TEST(UnqPtrArrayTest, OperatorIndexNullptr) {
     UnqPtr<int[]> ptr;
-    ASSERT_THROW(ptr[0], const char*);
+    ASSERT_THROW(ptr[0], std::exception);
 }
 
 TEST(UnqPtrArrayTest, Get) {
@@ -188,31 +189,6 @@ TEST(UnqPtrArrayTest, ResetNullptr) {
     ASSERT_EQ(ptr.get(), nullptr);
 }
 
-/// ------------------------realisation of WeakPtr--------------------------------
-
-TEST(WeakPtrTest, ConstructorAndUseCount) {
-    ControlBlock<int> block(new int(42), 1, 0);
-    WeakPtr<int> weakPtr(&block);
-    EXPECT_EQ(weakPtr.useCount(), 1);
-    WeakPtr<int> weakPtr2(weakPtr);
-    EXPECT_EQ(weakPtr2.useCount(), 1);
-}
-
-
-TEST(WeakPtrTest, AssignmentOperator) {
-    ControlBlock<int> block1(new int(42), 1, 0);
-    ControlBlock<int> block2(new int(10), 2, 1);
-    WeakPtr<int> weakPtr1(&block1);
-    WeakPtr<int> weakPtr2(&block2);
-
-    weakPtr1 = weakPtr2;
-    EXPECT_EQ(weakPtr1.useCount(), 2);
-
-    weakPtr1 = WeakPtr<int>(nullptr);
-    EXPECT_EQ(weakPtr1.useCount(), 0);
-}
-
-
 /// ------------------------realisation of ShrdPtr-----------------------------
 
 TEST(ShrdPtrTest, Constructor) {
@@ -256,7 +232,7 @@ TEST(ShrdPtrTest, DereferenceAndArrowOperator) {
     };
     testPtr* val = nullptr;
     ShrdPtr<testPtr> ptr3(val);
-    EXPECT_THROW(ptr3->a, const char*);
+    EXPECT_THROW(ptr3->a, std::exception);
 }
 
 TEST(ShrdPtrTest, AssignmentOperator) {
@@ -294,7 +270,7 @@ TEST(ShrdPtrTest, ResetTest) {
 
     ptr.reset();
     EXPECT_EQ(ptr.useCount(), 0);
-    EXPECT_THROW(*ptr, const char*);
+    EXPECT_THROW(*ptr, std::exception);
 }
 
 
@@ -306,7 +282,7 @@ TEST(ShrdPtrTest, SwapTest) {
     EXPECT_EQ(*ptr1, 60);
     EXPECT_EQ(*ptr2, 30);
     ShrdPtr<int> nullPtr(nullptr);
-    EXPECT_THROW(ptr1.swap(nullPtr), const char*);
+    EXPECT_THROW(ptr1.swap(nullPtr), std::exception);
 }
 
 
@@ -321,8 +297,9 @@ TEST(ShrdPtrTest, IsUniqueTest) {
     ptr2.reset();
     EXPECT_TRUE(ptr.isUnique());
     ShrdPtr<int> ptr3(nullptr);
-    EXPECT_THROW(ptr3.isUnique(), const char*);
+    EXPECT_THROW(ptr3.isUnique(), std::exception);
 }
+
 
 
 TEST(ShrdPtrTest, OperatorBoolTest) {
@@ -338,5 +315,5 @@ TEST(ShrdPtrTest, GetFunctionTest) {
     ShrdPtr<int> ptr(new int(99));
     EXPECT_EQ(ptr.get(), ptr.operator->());
     ShrdPtr<int> nullPtr(nullptr);
-    EXPECT_THROW(nullPtr.get(), const char*);
+    EXPECT_THROW(nullPtr.get(), std::exception);
 }

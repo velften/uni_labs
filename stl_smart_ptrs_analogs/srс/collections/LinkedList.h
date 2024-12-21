@@ -7,21 +7,25 @@ template <typename T>
 class LinkedList {
 private:
     struct Node {
-        T* data;
+        T *data;
         UnqPtr<Node> next;
+        Node *prev;
 
-        explicit Node(const T& item) : data(new T(item)), next(nullptr) {}
+        explicit Node(const T &item) : data(new T(item)), next(nullptr), prev(nullptr) {}
+
         ~Node() {
             delete data;
         }
+
+
     };
 
     UnqPtr<Node> head;
     int length;
 
-    T* getData() const {
-        T* data = new T[length];
-        Node* current = head.get();
+    T *getData() const {
+        T *data = new T[length];
+        Node *current = head.get();
         for (size_t i = 0; i < length; i++) {
             data[i] = *(current->data);
             current = current->next.get();
@@ -36,51 +40,41 @@ public:
         return length;
     }
 
-    T& get(int index) const{
-        if (index >= getLength()) {
-            throw std::out_of_range("Index is out of range");
-        }
-
-        Node* current = head.get();
-        for (int i = 0; i < index; i++) {
-            current = current->next.get();
-        }
-
-        return *(current->data);
+    T &get(int index) const {
+        return *(getNode(index)->data);
     }
 
-
-    T& getFirst() const {
+    T &getFirst() const {
         return get(0);
     }
 
-    T& getLast() const{
+    T &getLast() const {
         return get(getLength() - 1);
     }
 
-    Node* getHead() const  {
+    Node *getHead() const {
         return head.get();
     }
 
-    Node* getNode(int index) const {
+    Node *getNode(int index) const {
         if (index >= length || index < 0) {
             throw std::out_of_range("Index is out of range");
         }
 
-        Node* current = head.get();
+        Node *current = head.get();
         for (size_t i = 0; i < index; i++) {
             current = current->next.get();
         }
         return current;
     }
 
-    LinkedList<T>* getSubsequence(int startIndex, int endIndex) const {
+    LinkedList<T> *getSubsequence(int startIndex, int endIndex) const {
         if ((startIndex >= length || startIndex < 0) || (endIndex >= length || endIndex < 0)) {
             throw std::out_of_range("Index is out of range");
         }
 
-        auto* subSequence = new LinkedList;
-        T* data = getData();
+        auto *subSequence = new LinkedList;
+        T *data = getData();
         for (size_t i = startIndex; i <= endIndex; i++) {
             subSequence->append(data[i]);
         }
@@ -88,58 +82,64 @@ public:
         return subSequence;
     }
 
-    LinkedList<T>* append(const T& item)  {
+    LinkedList<T> *append(const T &item) {
         UnqPtr<Node> newNode(new Node(item));
         if (!head.get()) {
             head = std::move(newNode);
         } else {
-            Node* current = head.get();
+            Node *current = head.get();
             while (current->next.get()) {
                 current = current->next.get();
             }
             current->next = std::move(newNode);
+            current->next->prev = current;
         }
         ++length;
         return this;
     }
 
-    LinkedList<T>* prepend(const T& item) {
+    LinkedList<T> *prepend(const T &item) {
         auto newNode = UnqPtr<Node>(new Node(item));
+        if (head.get()) {
+            head->prev = newNode.get();
+        }
         newNode->next = std::move(head);
         head = std::move(newNode);
         ++length;
         return this;
     }
 
-    LinkedList<T>* insertAt(const T& item, int index) {
+
+    LinkedList<T> *insertAt(const T &item, int index) {
         if (index > getLength() || index < 0) {
             throw std::out_of_range("Index is out of range");
         }
         if (index == 0) {
-            this->prepend(item);
-            return this;
+            return prepend(item);
         }
-        else {
-            Node* current = head.get();
-            for (size_t i = 0; i < index - 1; i++) {
-                current = current->next.get();
-            }
 
-            auto newNode = UnqPtr<Node>(new Node(item));
-            newNode->next = std::move(current->next);
-            current->next = std::move(newNode);
+        Node *prevNode = getNode(index - 1);
+        auto newNode = UnqPtr<Node>(new Node(item));
+
+        newNode->next = std::move(prevNode->next);
+        if (newNode->next.get()) {
+            newNode->next->prev = newNode.get();
         }
+
+        prevNode->next = std::move(newNode);
+        prevNode->next->prev = prevNode;
         ++length;
         return this;
     }
 
-    LinkedList<T>* concat(const LinkedList<T>& sequence)  {
+
+    LinkedList<T> *concat(const LinkedList<T> &sequence) {
         if (sequence.getLength() == 0) {
             return this;
         }
 
-        Node* current = head.get();
-        T* sequenceData = sequence.getData();
+        Node *current = head.get();
+        T *sequenceData = sequence.getData();
         if (!current) {
             head = UnqPtr<Node>(new Node(sequenceData[0]));
             current = head.get();
@@ -162,7 +162,7 @@ public:
 
     int find(const T &value) const {
         int index = 0;
-        Node* current = head.get();
+        Node *current = head.get();
         while (current) {
             if (*(current->data) == value) {
                 return index;
@@ -173,8 +173,8 @@ public:
         return -1;
     }
 
-    LinkedList<T>* map(T (*function)(T)) {
-        Node* current = head.get();
+    LinkedList<T> *map(T (*function)(T)) {
+        Node *current = head.get();
         while (current) {
             *(current->data) = function(*(current->data));
             current = current->next.get();
@@ -190,20 +190,28 @@ public:
         if (index == 0) {
             UnqPtr<Node> temp = std::move(head);
             head = std::move(temp->next);
+            if (head.get()) {
+                head->prev = nullptr;
+            }
         } else {
-            Node* prevNode = getNode(index - 1);
-            if (prevNode->next.get()) {
-                UnqPtr<Node> temp = std::move(prevNode->next);
-                prevNode->next = std::move(temp->next);
+            Node* target = getNode(index);
+            if (target->next.get()) {
+                target->next->prev = target->prev;
+            }
+            if (target->prev) {
+                target->prev->next = std::move(target->next);
             }
         }
 
-        --length;
+        --length; // Уменьшаем длину списка
         return this;
     }
 
+
+
+
     T reduce(T (*function)(T, T), T startValue) const {
-        Node* current = head.get();
+        Node *current = head.get();
         T result = startValue;
         while (current) {
             result = function(*(current->data), result);
@@ -212,9 +220,9 @@ public:
         return result;
     }
 
-    LinkedList<T>* where(bool (*function)(T)) const{
+    LinkedList<T> *where(bool (*function)(T)) const {
         auto result = new LinkedList<T>;
-        Node* current = head.get();
+        Node *current = head.get();
         while (current) {
             if (function(*(current->data))) {
                 result->append(*(current->data));
@@ -224,17 +232,17 @@ public:
         return result;
     }
 
-    T& operator[](int index) const {
+    T &operator[](int index) const {
         return get(index);
     }
 
-    bool operator==(const LinkedList<T>& sequence) const{
+    bool operator==(const LinkedList<T> &sequence) const {
         if (length != sequence.getLength()) {
             return false;
         }
 
-        UnqPtr<T[]> data1 (getData());
-        UnqPtr<T[]> data2(sequence.getData());
+        UnqPtr<T[]> data1(getData(), getLength());
+        UnqPtr<T[]> data2(sequence.getData(), sequence.getLength());
         for (size_t i = 0; i < length; i++) {
             if (data1[i] != data2[i]) {
                 return false;
@@ -242,13 +250,14 @@ public:
         }
         return true;
     }
-    bool operator!=(const LinkedList<T>& sequence) const{
+
+    bool operator!=(const LinkedList<T> &sequence) const {
         if (length != sequence.getLength()) {
             return true;
         }
 
-        UnqPtr<T[]> data1 (getData());
-        UnqPtr<T[]> data2(sequence.getData());
+        UnqPtr<T[]> data1(getData(), getLength());
+        UnqPtr<T[]> data2(sequence.getData(), sequence.getLength());
         for (size_t i = 0; i < length; i++) {
             if (data1[i] != data2[i]) {
                 return true;
@@ -256,12 +265,12 @@ public:
         }
         return false;
     }
+
     ~LinkedList() {
-        while ((head->next).get() != nullptr) {
-            head = std::move(head->next);
+        while (head.get()) {
+            UnqPtr<Node> temp = std::move(head);
+            head = std::move(temp->next);
         }
     }
-
 };
-
 #endif

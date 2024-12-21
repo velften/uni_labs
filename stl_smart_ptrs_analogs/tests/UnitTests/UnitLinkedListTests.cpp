@@ -43,7 +43,7 @@ TEST(LinkedListTest, InsertAt) {
     EXPECT_EQ(list.get(1), 2);
     EXPECT_EQ(list.get(2), 3);
 
-    EXPECT_THROW(list.insertAt(4, 5), const char*);
+    EXPECT_THROW(list.insertAt(4, 5), std::exception);
 }
 
 TEST(LinkedListTest, Get) {
@@ -56,7 +56,7 @@ TEST(LinkedListTest, Get) {
     EXPECT_EQ(list.get(1), 2);
     EXPECT_EQ(list.get(2), 3);
 
-    EXPECT_THROW(list.get(3), const char *);
+    EXPECT_THROW(list.get(3), std::exception);
 }
 
 TEST(LinkedListTest, GetSubsequence) {
@@ -67,7 +67,7 @@ TEST(LinkedListTest, GetSubsequence) {
     list.append(4);
 
     LinkedList<int>* subList = list.getSubsequence(1, 2);
-    EXPECT_THROW(LinkedList<int>* subList1 = list.getSubsequence(-11, 2), const char*);
+    EXPECT_THROW(LinkedList<int>* subList1 = list.getSubsequence(-11, 2), std::exception);
 
     EXPECT_EQ(subList->getLength(), 2);
     EXPECT_EQ((*subList)[0], 2);
@@ -200,7 +200,7 @@ TEST(LinkedListTest, AccessOperator) {
     EXPECT_EQ(list[1], 2);
     EXPECT_EQ(list[2], 3);
 
-    EXPECT_THROW(list[3], const char*);
+    EXPECT_THROW(list[3], std::exception);
 }
 
 TEST(LinkedListTest, GetNode){
@@ -211,7 +211,7 @@ TEST(LinkedListTest, GetNode){
     list2.append(1);
     list2.append(2);
     list.concat(list2);
-    EXPECT_THROW(list.getNode(-1), const char*);
+    EXPECT_THROW(list.getNode(-1), std::exception);
     EXPECT_EQ(*(list.getNode(2)->data), 1);
 }
 
@@ -220,7 +220,7 @@ TEST(LinkedListTest, Delete) {
     list.append(1);
     list.append(2);
     list.append(3);
-    list.del(0);
+   list.del(0);
     list.del(1);
 
     EXPECT_EQ(list.getLength(), 1);
@@ -228,5 +228,5 @@ TEST(LinkedListTest, Delete) {
     list.append(3);
     EXPECT_EQ(list.get(1), 3);
 
-    EXPECT_THROW(list.del(2), const char*);
+    EXPECT_THROW(list.del(2), std::exception);
 }
