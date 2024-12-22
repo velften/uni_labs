@@ -90,7 +90,7 @@ TEST(LinkedListTest, Concat) {
     list1.concat(list2);
     LinkedList<int> list3;
     list3.concat(list1);
-    EXPECT_EQ(list3.getLength(), 5);
+    EXPECT_EQ(list3.getLength(), 4);
     EXPECT_EQ(list3.getFirst(), 1);
     EXPECT_EQ(list1.getLength(), 4);
     EXPECT_EQ(list1.getFirst(), 1);

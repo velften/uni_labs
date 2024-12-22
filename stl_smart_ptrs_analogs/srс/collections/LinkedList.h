@@ -16,11 +16,12 @@ private:
         ~Node() {
             delete data;
         }
-
-
     };
 
     UnqPtr<Node> head;
+
+    Node* tail;
+
     int length;
 
     T *getData() const {
@@ -33,8 +34,10 @@ private:
         return data;
     }
 
+
 public:
-    LinkedList() : head(nullptr), length(0) {}
+    LinkedList() : head(nullptr), tail(nullptr), length(0) {}
+
 
     [[nodiscard]] int getLength() const {
         return length;
@@ -49,7 +52,7 @@ public:
     }
 
     T &getLast() const {
-        return get(getLength() - 1);
+        return *(tail->data);
     }
 
     Node *getHead() const {
@@ -86,13 +89,11 @@ public:
         UnqPtr<Node> newNode(new Node(item));
         if (!head.get()) {
             head = std::move(newNode);
+            tail = head.get();
         } else {
-            Node *current = head.get();
-            while (current->next.get()) {
-                current = current->next.get();
-            }
-            current->next = std::move(newNode);
-            current->next->prev = current;
+            tail->next = std::move(newNode);
+            tail->next->prev = tail;
+            tail = tail->next.get();
         }
         ++length;
         return this;
@@ -100,7 +101,9 @@ public:
 
     LinkedList<T> *prepend(const T &item) {
         auto newNode = UnqPtr<Node>(new Node(item));
-        if (head.get()) {
+        if (!head.get()) {
+            tail = newNode.get();
+        } else {
             head->prev = newNode.get();
         }
         newNode->next = std::move(head);
@@ -109,13 +112,15 @@ public:
         return this;
     }
 
-
     LinkedList<T> *insertAt(const T &item, int index) {
         if (index > getLength() || index < 0) {
             throw std::out_of_range("Index is out of range");
         }
         if (index == 0) {
             return prepend(item);
+        }
+        if (index == length) {
+            return append(item);
         }
 
         Node *prevNode = getNode(index - 1);
@@ -128,35 +133,39 @@ public:
 
         prevNode->next = std::move(newNode);
         prevNode->next->prev = prevNode;
+
         ++length;
         return this;
     }
-
 
     LinkedList<T> *concat(const LinkedList<T> &sequence) {
         if (sequence.getLength() == 0) {
             return this;
         }
-
-        Node *current = head.get();
         T *sequenceData = sequence.getData();
-        if (!current) {
+        if (!head.get()) {
             head = UnqPtr<Node>(new Node(sequenceData[0]));
-            current = head.get();
+            tail = head.get();
             ++length;
+
+            for (size_t i = 1; i < sequence.getLength(); i++) {
+                auto newNode = UnqPtr<Node>(new Node(sequenceData[i]));
+                tail->next = std::move(newNode);
+                tail->next->prev = tail;
+                tail = tail->next.get();
+                ++length;
+            }
+        } else {
+            for (size_t i = 0; i < sequence.getLength(); i++) {
+                auto newNode = UnqPtr<Node>(new Node(sequenceData[i]));
+                tail->next = std::move(newNode);
+                tail->next->prev = tail;
+                tail = tail->next.get();
+            }
+            length += sequence.getLength();
         }
 
-        while (current->next.get()) {
-            current = current->next.get();
-        }
-
-        for (size_t i = 0; i < sequence.getLength(); i++) {
-            auto newNode = UnqPtr<Node>(new Node(sequenceData[i]));
-            current->next = std::move(newNode);
-            current = current->next.get();
-        }
         delete[] sequenceData;
-        length += sequence.getLength();
         return this;
     }
 
@@ -192,9 +201,14 @@ public:
             head = std::move(temp->next);
             if (head.get()) {
                 head->prev = nullptr;
+            } else {
+                tail = nullptr;
             }
         } else {
             Node* target = getNode(index);
+            if (target == tail) {
+                tail = target->prev;
+            }
             if (target->next.get()) {
                 target->next->prev = target->prev;
             }
@@ -203,7 +217,7 @@ public:
             }
         }
 
-        --length; // Уменьшаем длину списка
+        --length;
         return this;
     }
 
