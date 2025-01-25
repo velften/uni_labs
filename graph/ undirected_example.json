@@ -1,0 +1,17 @@
+{
+  "type": "undirected",
+  "vertices": ["A", "B", "C", "D", "E", "F", "G", "H"],
+  "edges": [
+    {"from": "A", "to": "B", "weight": 2.0},
+    {"from": "A", "to": "C", "weight": 3.5},
+    {"from": "B", "to": "D", "weight": 1.5},
+    {"from": "C", "to": "E", "weight": 4.0},
+    {"from": "D", "to": "F", "weight": 2.5},
+    {"from": "E", "to": "G", "weight": 3.0},
+    {"from": "F", "to": "H", "weight": 1.0},
+    {"from": "G", "to": "H", "weight": 2.0},
+    {"from": "B", "to": "E", "weight": 2.5},
+    {"from": "C", "to": "F", "weight": 3.0}
+  ]
+}
+
